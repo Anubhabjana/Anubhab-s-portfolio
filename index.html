@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anubhab Jana — exploring physics & building things</title>
+    <meta name="description" content="Physics Undergrad · Experimental Researcher · Occasional Developer">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/splitting/dist/splitting.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/splitting/dist/splitting.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Scroll Progress Indicator -->
+    <div class="scroll-progress" id="scroll-progress">
+        <div class="scroll-progress-fill"></div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div class="loader" id="loader">
+        <div class="pcb-container">
+            <svg class="pcb-svg" viewBox="0 0 200 150" fill="none" stroke="#FFD700" stroke-width="1.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <!-- A Traces -->
+                <path class="pcb-trace" id="trace-a1" d="M -10 30 H 40 L 50 40 V 100" />
+                <path class="pcb-trace" id="trace-a2" d="M 50 40 H 80 L 90 50 V 100" />
+                <path class="pcb-trace" id="trace-a3" d="M 50 70 H 90" />
+
+                <!-- J Traces -->
+                <path class="pcb-trace" id="trace-j1"
+                    d="M -10 10 H 120 L 130 20 H 150 L 160 30 V 90 A 10 10 0 0 1 150 100 H 130 A 10 10 0 0 1 120 90 V 75" />
+
+                <!-- Deco Traces -->
+                <path class="pcb-trace deco" d="M 40 160 V 120 L 20 100 H -10" />
+                <path class="pcb-trace deco" d="M 210 130 H 150 L 140 120 V 105" />
+                <path class="pcb-trace deco" d="M 120 -10 V 0 L 130 10" />
+
+                <!-- Glowing Signal Dots. Dashed offset animated from CSS/JS -->
+                <path class="pcb-glow" id="glow-a1" d="M -10 30 H 40 L 50 40 V 100" />
+                <path class="pcb-glow" id="glow-j1"
+                    d="M -10 10 H 120 L 130 20 H 150 L 160 30 V 90 A 10 10 0 0 1 150 100 H 130 A 10 10 0 0 1 120 90 V 75" />
+
+                <!-- Component Pads -->
+                <g class="pcb-pads" fill="#FFD700">
+                    <circle cx="50" cy="100" r="2.5" />
+                    <circle cx="90" cy="100" r="2.5" />
+                    <circle cx="120" cy="75" r="2.5" />
+                    <circle cx="40" cy="160" r="2.5" />
+                    <circle cx="140" cy="120" r="2.5" />
+                    <circle cx="210" cy="130" r="2.5" />
+                    <circle cx="120" cy="-10" r="2.5" />
+                </g>
+
+                <!-- Progress Bar Trace -->
+                <path class="progress-bg" d="M 10 140 H 190" stroke="rgba(255,215,0,0.2)" />
+                <path class="pcb-trace progress-bar-trace" id="progress-trace" d="M 10 140 H 190" stroke-width="2" />
+                <circle class="pcb-pads" cx="10" cy="140" r="2.5" fill="#FFD700" />
+                <circle class="pcb-pads" cx="190" cy="140" r="2.5" fill="#FFD700" />
+            </svg>
+        </div>
+        <div class="loader-flash" id="loader-flash"></div>
+    </div>
+
+    <!-- Custom Cursor -->
+    <div class="cursor-system" id="cursor-system">
+        <div class="cursor-dot" id="cursor-dot"></div>
+        <div class="cursor-ring" id="cursor-ring"></div>
+        <div class="cursor-pill" id="cursor-pill">
+            <span class="cursor-pill-text">OPEN</span>
+        </div>
+        <div class="cursor-text-line" id="cursor-text-line"></div>
+    </div>
+
+
+
+    <!-- Noise Overlay -->
+    <div class="noise-overlay" id="noise-overlay"></div>
+
+    <!-- Easter Egg Toast -->
+    <div class="easter-egg-toast" id="easter-egg-toast">&#9883; nice, you found it</div>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo magnetic-element" data-cursor="hover">Anubhab Jana</a>
+            <ul class="nav-links">
+                <li><a href="#about" class="nav-link magnetic-element signal-nav">About</a></li>
+                <li><a href="#research" class="nav-link magnetic-element signal-nav">Research</a></li>
+                <li><a href="#projects" class="nav-link magnetic-element signal-nav">Projects</a></li>
+                <li><a href="#contact" class="nav-link magnetic-element signal-nav">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <canvas class="hero-canvas" id="hero-canvas"></canvas>
+        <div class="hero-container">
+            <h1 class="hero-heading" id="hero-heading">exploring physics &amp; building things</h1>
+            <p class="hero-subline" id="hero-subline">
+                <span class="word">Physics</span>
+                <span class="word">Undergrad</span>
+                <span class="word">·</span>
+                <span class="word">Experimental</span>
+                <span class="word">Researcher</span>
+                <span class="word">·</span>
+                <span class="word">Occasional</span>
+                <span class="word">Developer</span>
+                <span class="cursor-blink">|</span>
+            </p>
+            <div class="hero-buttons">
+                <a href="#projects" class="btn btn-primary magnetic-element typewriter-btn" data-cursor="hover"
+                    data-hover-text="Let's Go →">
+                    <span class="btn-text">View My Work</span>
+                </a>
+                <a href="#contact" class="btn btn-secondary magnetic-element typewriter-btn" data-cursor="hover"
+                    data-hover-text="Say Hello ⚡">
+                    <span class="btn-text">Get In Touch</span>
+                </a>
+                <a href="cv.pdf" class="btn btn-secondary magnetic-element typewriter-btn" data-cursor="hover"
+                    data-hover-text="Grab It 📄" target="_blank">
+                    <span class="btn-text">Download CV</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Marquee Strip 1 -->
+    <div class="marquee-container">
+        <div class="marquee" id="marquee1">
+            <div class="marquee-content">
+                <span class="marquee-word">PHYSICS</span>
+                <span class="marquee-symbol">&#10209;</span>
+                <span class="marquee-word">RESEARCH</span>
+                <span class="marquee-symbol">&#10022;</span>
+                <span class="marquee-word">CODE</span>
+                <span class="marquee-symbol">&#9670;</span>
+                <span class="marquee-word">BUILD</span>
+                <span class="marquee-symbol">&#10209;</span>
+                <span class="marquee-word">EXPERIMENT</span>
+                <span class="marquee-symbol">&#10022;</span>
+                <span class="marquee-word">REPEAT</span>
+                <span class="marquee-symbol">&#9670;</span>
+                <span class="marquee-word">ANUBHAB JANA</span>
+                <span class="marquee-symbol">&#10209;</span>
+                <span class="marquee-word">PHYSICS</span>
+                <span class="marquee-symbol">&#10022;</span>
+                <span class="marquee-word">RESEARCH</span>
+                <span class="marquee-symbol">&#9670;</span>
+                <span class="marquee-word">CODE</span>
+                <span class="marquee-symbol">&#10209;</span>
+                <span class="marquee-word">BUILD</span>
+                <span class="marquee-symbol">&#10022;</span>
+                <span class="marquee-word">EXPERIMENT</span>
+                <span class="marquee-symbol">&#9670;</span>
+                <span class="marquee-word">REPEAT</span>
+                <span class="marquee-symbol">&#10209;</span>
+                <span class="marquee-word">ANUBHAB JANA</span>
+                <span class="marquee-symbol">&#10022;</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-left">
+                    <span class="section-label scramble-text" data-scramble>About</span>
+                    <p class="about-bio" id="about-bio" data-splitting="lines">I'm a B.Sc. Physics Honours student
+                        obsessed with experimental research and building things — from cryogenic amplifiers to websites.
+                        If it can be measured or coded, I'm interested.</p>
+                </div>
+                <div class="about-right">
+                    <div class="currently-badge" id="currently-badge">
+                        <span class="badge-label">Currently</span>
+                        <span class="badge-text typing-text" data-typing>B.Sc. Physics @ RKMVC</span>
+                        <span class="badge-sub typing-text-delayed" data-typing-delayed>Sem 3 SGPA: 8.62</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="education-section">
+                <h3 class="education-title scramble-text" data-scramble>Education</h3>
+                <div class="education-list">
+                    <div class="education-item" data-cursor="hover">
+                        <div class="edu-highlight"></div>
+                        <div class="edu-year">2024 — Present</div>
+                        <div class="edu-content">
+                            <h4>B.Sc. Physics Honours</h4>
+                            <p>RKMVC College, Rahara</p>
+                            <span class="edu-grade">SGPA: 8.62 → 8.71 → 8.62</span>
+                        </div>
+                    </div>
+                    <div class="education-item" data-cursor="hover">
+                        <div class="edu-highlight"></div>
+                        <div class="edu-year">2022 — 2024</div>
+                        <div class="edu-content">
+                            <h4>Class 12 WBCHSE</h4>
+                            <p>Nandigram B.M.T Shishkaniketan</p>
+                            <span class="edu-grade">Grade: O</span>
+                        </div>
+                    </div>
+                    <div class="education-item" data-cursor="hover">
+                        <div class="edu-highlight"></div>
+                        <div class="edu-year">2016 — 2022</div>
+                        <div class="edu-content">
+                            <h4>Class 10 WBBSE</h4>
+                            <p>Kanchanagar Didaruddin Vidyabhaban</p>
+                            <span class="edu-grade">96%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Marquee Strip 2 -->
+    <div class="marquee-container">
+        <div class="marquee marquee-reverse" id="marquee2">
+            <div class="marquee-content">
+                <span class="marquee-word">CRYOGENICS</span>
+                <span class="marquee-symbol">&#9670;</span>
+                <span class="marquee-word">PCB DESIGN</span>
+                <span class="marquee-symbol">&#10209;</span>
+                <span class="marquee-word">KICAD</span>
+                <span class="marquee-symbol">&#10022;</span>
+                <span class="marquee-word">PYTHON</span>
+                <span class="marquee-symbol">&#9670;</span>
+                <span class="marquee-word">MANIM</span>
+                <span class="marquee-symbol">&#10209;</span>
+                <span class="marquee-word">LATEX</span>
+                <span class="marquee-symbol">&#10022;</span>
+                <span class="marquee-word">SIGNAL PROCESSING</span>
+                <span class="marquee-symbol">&#9670;</span>
+                <span class="marquee-word">CRYOGENICS</span>
+                <span class="marquee-symbol">&#10209;</span>
+                <span class="marquee-word">PCB DESIGN</span>
+                <span class="marquee-symbol">&#10022;</span>
+                <span class="marquee-word">KICAD</span>
+                <span class="marquee-symbol">&#9670;</span>
+                <span class="marquee-word">PYTHON</span>
+                <span class="marquee-symbol">&#10209;</span>
+                <span class="marquee-word">MANIM</span>
+                <span class="marquee-symbol">&#10022;</span>
+                <span class="marquee-word">LATEX</span>
+                <span class="marquee-symbol">&#9670;</span>
+                <span class="marquee-word">SIGNAL PROCESSING</span>
+                <span class="marquee-symbol">&#10209;</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Research Section -->
+    <section class="research" id="research">
+        <div class="container">
+            <span class="section-label scramble-text" data-scramble>Research</span>
+            <div class="research-card" id="research-card" data-cursor="card">
+                <div class="research-card-noise"></div>
+                <div class="research-card-shine"></div>
+                <div class="research-label glitch-hover">where I touched cryogenic stuff</div>
+                <div class="research-content">
+                    <h3 class="research-title">Summer Research Intern — <span class="iacs-label glitch-text">IACS</span>
+                    </h3>
+                    <p class="research-meta">Summer 2025 · Supervisor: Prof. Mintu Mondal</p>
+                    <p class="research-project">Design and fabrication of a <mark
+                            class="kinetic-highlight">cryogenic</mark> pre-amplifier for high-frequency Johnson noise
+                        thermometry</p>
+                    <ul class="research-points">
+                        <li class="bullet-point">Built low-noise amplification circuitry for <mark
+                                class="kinetic-highlight">cryogenic</mark> environments</li>
+                        <li class="bullet-point"><mark class="kinetic-highlight">PCB</mark> design in KiCad, soldering,
+                            signal processing</li>
+                        <li class="bullet-point">Operated lock-in amplifiers and <mark
+                                class="kinetic-highlight">oscilloscopes</mark></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section class="projects" id="projects">
+        <div class="container">
+            <span class="section-label scramble-text" data-scramble>Projects</span>
+            <div class="projects-grid">
+                <div class="project-card" id="project-card-1" data-cursor="card">
+                    <div class="project-card-shine"></div>
+                    <div class="project-corner-fold"></div>
+                    <div class="project-card-inner">
+                        <div class="project-header">
+                            <h3 class="project-title shuffle-text">Primordium.site</h3>
+                            <p class="project-desc">Physics symposium website for college</p>
+                        </div>
+                        <div class="project-footer">
+                            <div class="project-tags">
+                                <span class="tag">HTML</span>
+                                <span class="tag">CSS</span>
+                                <span class="tag">TailwindCSS</span>
+                            </div>
+                            <a href="#" class="project-link" data-cursor="hover">View Site</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card" id="project-card-2" data-cursor="card">
+                    <div class="project-card-shine"></div>
+                    <div class="project-corner-fold"></div>
+                    <div class="project-card-inner">
+                        <div class="project-header">
+                            <h3 class="project-title shuffle-text">Women Safety App</h3>
+                            <p class="project-desc">Mobile app with real-time alerts + location tracking. Exploring ML
+                                for predictive threat detection.</p>
+                        </div>
+                        <div class="project-footer">
+                            <div class="project-tags">
+                                <span class="tag">Python</span>
+                                <span class="tag">ML</span>
+                                <span class="tag">MongoDB</span>
+                            </div>
+                            <a href="https://anubhabjana.github.io/hackathon/" class="project-link" data-cursor="hover"
+                                target="_blank">View Project</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section - Horizontal Scroll -->
+    <section class="skills" id="skills">
+        <div class="skills-progress-bar" id="skills-progress-bar">
+            <div class="skills-progress-fill"></div>
+        </div>
+        <div class="container">
+            <span class="section-label scramble-text" data-scramble>Skills</span>
+        </div>
+        <div class="skills-horizontal-wrapper" id="skills-wrapper">
+            <div class="skills-horizontal-track" id="skills-track">
+                <div class="skill-column">
+                    <h4 class="skill-group-title chaotic-entrance" data-chaotic>Languages</h4>
+                    <div class="skill-tags">
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">Python</span>
+                        </span>
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">JavaScript</span>
+                        </span>
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">HTML</span>
+                        </span>
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">CSS</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="skill-column">
+                    <h4 class="skill-group-title chaotic-entrance" data-chaotic>Frameworks & Tools</h4>
+                    <div class="skill-tags">
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">TailwindCSS</span>
+                        </span>
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">MongoDB</span>
+                        </span>
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">KiCad</span>
+                        </span>
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">LaTeX</span>
+                        </span>
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">Manim</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="skill-column">
+                    <h4 class="skill-group-title chaotic-entrance" data-chaotic>Core Skills</h4>
+                    <div class="skill-tags">
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">PCB Design</span>
+                        </span>
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">Cryogenic Setups</span>
+                        </span>
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">Lock-in Amplifiers</span>
+                        </span>
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">Oscilloscopes</span>
+                        </span>
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">Signal Processing</span>
+                        </span>
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">Optics</span>
+                        </span>
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">Magnetism</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="skill-column">
+                    <h4 class="skill-group-title chaotic-entrance" data-chaotic>Interests</h4>
+                    <div class="skill-tags">
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">Machine Learning</span>
+                        </span>
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">Computational Physics</span>
+                        </span>
+                        <span class="skill-tag" data-cursor="hover">
+                            <svg class="tag-border-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+                                <rect class="tag-border-rect" x="1" y="1" width="98" height="38" fill="none"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="tag-text">Physics Education Tech</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Achievements Section -->
+    <section class="achievements" id="achievements">
+        <div class="container">
+            <span class="section-label scramble-text" data-scramble>Achievements</span>
+            <div class="timeline">
+                <div class="timeline-line" id="timeline-line">
+                    <div class="timeline-pulse"></div>
+                </div>
+                <div class="timeline-items">
+                    <div class="timeline-item" data-cursor="hover">
+                        <div class="timeline-year year-counter" data-year="2019">0000</div>
+                        <div class="timeline-content">
+                            <h4>NMMSE</h4>
+                            <p>National Means-cum-Merit Scholarship</p>
+                            <div class="strikethrough-line"></div>
+                        </div>
+                    </div>
+                    <div class="timeline-item" data-cursor="hover">
+                        <div class="timeline-year year-counter" data-year="2022">0000</div>
+                        <div class="timeline-content">
+                            <h4>SVMCM</h4>
+                            <p>Swami Vivekananda Merit-cum-Means</p>
+                            <div class="strikethrough-line"></div>
+                        </div>
+                    </div>
+                    <div class="timeline-item" data-cursor="hover">
+                        <div class="timeline-year year-counter" data-year="2024">0000</div>
+                        <div class="timeline-content">
+                            <h4>SVMCM</h4>
+                            <p>Swami Vivekananda Merit-cum-Means</p>
+                            <div class="strikethrough-line"></div>
+                        </div>
+                    </div>
+                    <div class="timeline-item" data-cursor="hover">
+                        <div class="timeline-year year-counter" data-year="2024">0000</div>
+                        <div class="timeline-content">
+                            <h4>Spoken Tutorial Project</h4>
+                            <p>LaTeX Training — IIT Bombay</p>
+                            <div class="strikethrough-line"></div>
+                        </div>
+                    </div>
+                    <div class="timeline-item" data-cursor="hover">
+                        <div class="timeline-year year-counter" data-year="2024">0000</div>
+                        <div class="timeline-content">
+                            <h4>Indian Space Lab</h4>
+                            <p>Drone Workshop — Oct 2024</p>
+                            <div class="strikethrough-line"></div>
+                        </div>
+                    </div>
+                    <div class="timeline-item" data-cursor="hover">
+                        <div class="timeline-year year-counter" data-year="2025">0000</div>
+                        <div class="timeline-content">
+                            <h4>National Science Day</h4>
+                            <p>"Empowering Indian Youth for Viksit Bharat" — Feb 2025</p>
+                            <div class="strikethrough-line"></div>
+                        </div>
+                    </div>
+                    <div class="timeline-item" data-cursor="hover">
+                        <div class="timeline-year year-counter" data-year="2026">0000</div>
+                        <div class="timeline-content">
+                            <h4>2nd Position, Hackathon @ Exabyte</h4>
+                            <p>SXC Kolkata's Annual Tech Fest — Built Women Safety App</p>
+                            <div class="strikethrough-line"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Marquee Strip 3 (Large) -->
+    <div class="marquee-container marquee-large">
+        <div class="marquee" id="marquee3">
+            <div class="marquee-content">
+                <span class="marquee-word">QUANTUM</span>
+                <span class="marquee-symbol">&#9670;</span>
+                <span class="marquee-word">EXPERIMENT</span>
+                <span class="marquee-symbol">&#10209;</span>
+                <span class="marquee-word">INNOVATION</span>
+                <span class="marquee-symbol">&#10022;</span>
+                <span class="marquee-word">DISCOVERY</span>
+                <span class="marquee-symbol">&#9670;</span>
+                <span class="marquee-word">QUANTUM</span>
+                <span class="marquee-symbol">&#10209;</span>
+                <span class="marquee-word">EXPERIMENT</span>
+                <span class="marquee-symbol">&#10022;</span>
+                <span class="marquee-word">INNOVATION</span>
+                <span class="marquee-symbol">&#9670;</span>
+                <span class="marquee-word">DISCOVERY</span>
+                <span class="marquee-symbol">&#10209;</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <canvas class="contact-particles" id="contact-particles"></canvas>
+        <div class="container">
+            <div class="contact-content">
+                <span class="section-label section-label-light scramble-text" data-scramble>Contact</span>
+                <h2 class="contact-email magnetic-text block-reveal" id="contact-email" data-cursor="text" data-copy>
+                    anubhabjana.vc@gmail.com</h2>
+                <p class="contact-line percentage-counter" data-cursor="hover">100% chance I read it</p>
+
+                <div class="social-links">
+                    <a href="https://github.com/Anubhabjana" class="social-link magnetic-element fill-from-bottom"
+                        data-cursor="hover" target="_blank">GitHub</a>
+                    <a href="https://www.linkedin.com/in/anubhab-jana-737a03308"
+                        class="social-link magnetic-element fill-from-bottom" data-cursor="hover"
+                        target="_blank">LinkedIn</a>
+                </div>
+                <p class="contact-line">90% chance I reply</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" id="footer">
+        <div class="footer-grain"></div>
+        <div class="container">
+            <div class="footer-content">
+                <h2 class="footer-name magnetic-text letter-drop" id="footer-name">ANUBHAB JANA</h2>
+                <p class="footer-tagline">exploring physics &amp; building things</p>
+
+                <!-- Rotating Badge -->
+                <div class="rotating-badge">
+                    <svg viewBox="0 0 200 200" class="rotating-badge-svg">
+                        <defs>
+                            <path id="circlePath" d="M 100, 100 m -70, 0 a 70,70 0 1,1 140,0 a 70,70 0 1,1 -140,0" />
+                        </defs>
+                        <circle cx="100" cy="100" r="8" fill="#FFE500" />
+                        <text class="rotating-badge-text">
+                            <textPath href="#circlePath">· PHYSICS · CODE · RESEARCH · BUILD · EXPERIMENT ·</textPath>
+                        </text>
+                    </svg>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; Anubhab Jana. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
